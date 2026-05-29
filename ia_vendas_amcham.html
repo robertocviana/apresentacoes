@@ -1,0 +1,1855 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <title>IA em Vendas — Roberto Viana · Ipê Digital</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Instrument+Serif:ital@0;1&display=swap"
+    rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      color: #fff;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(124, 58, 237, 0.15), transparent),
+        radial-gradient(ellipse 60% 50% at 80% 100%, rgba(14, 165, 233, 0.1), transparent), #000;
+      z-index: -2;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.03) 1px, transparent 0);
+      background-size: 4px 4px;
+      pointer-events: none;
+      z-index: -1;
+      opacity: 0.6;
+    }
+
+    .deck {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      padding: 6vh 7vw;
+      opacity: 0;
+      transform: scale(1.05);
+      transition: opacity .8s cubic-bezier(.22, .61, .36, 1), transform .8s cubic-bezier(.22, .61, .36, 1);
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .slide.active {
+      opacity: 1;
+      transform: scale(1);
+      pointer-events: auto;
+    }
+
+    .slide::before {
+      content: '';
+      position: absolute;
+      width: 1200px;
+      height: 1200px;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0;
+      transition: opacity 1.5s ease;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .slide.active::before {
+      opacity: 1;
+    }
+
+    .slide>* {
+      position: relative;
+      z-index: 1;
+    }
+
+    .glow-blue::before {
+      background: radial-gradient(circle, rgba(14, 165, 233, 0.35), transparent 60%);
+      top: -300px;
+      left: -200px;
+    }
+
+    .glow-purple::before {
+      background: radial-gradient(circle, rgba(168, 85, 247, 0.4), transparent 60%);
+      bottom: -300px;
+      right: -200px;
+    }
+
+    .glow-magenta::before {
+      background: radial-gradient(circle, rgba(236, 72, 153, 0.35), transparent 60%);
+      top: -200px;
+      right: -300px;
+    }
+
+    .glow-cyan::before {
+      background: radial-gradient(circle, rgba(34, 211, 238, 0.3), transparent 60%);
+      bottom: -200px;
+      left: -300px;
+    }
+
+    .glow-red::before {
+      background: radial-gradient(circle, rgba(244, 63, 94, 0.3), transparent 60%);
+      top: 30%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .glow-violet::before {
+      background: radial-gradient(circle, rgba(139, 92, 246, 0.5), transparent 55%);
+      top: -200px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .glow-emerald::before {
+      background: radial-gradient(circle, rgba(16, 185, 129, 0.25), transparent 60%);
+      bottom: -300px;
+      right: 30%;
+    }
+
+    .eyebrow {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.5);
+      margin-bottom: 32px;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .eyebrow::before {
+      content: '';
+      width: 24px;
+      height: 1px;
+      background: rgba(255, 255, 255, 0.4);
+    }
+
+    h1.hero {
+      font-size: clamp(48px, 6.5vw, 96px);
+      font-weight: 600;
+      line-height: 1.05;
+      letter-spacing: -0.035em;
+      color: #fff;
+    }
+
+    h2.title {
+      font-size: clamp(36px, 4.8vw, 72px);
+      font-weight: 600;
+      line-height: 1.08;
+      letter-spacing: -0.03em;
+      background: linear-gradient(180deg, #fff 0%, rgba(255, 255, 255, 0.75) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      font-size: clamp(16px, 1.3vw, 20px);
+      font-weight: 400;
+      color: rgba(255, 255, 255, 0.6);
+      line-height: 1.6;
+      max-width: 720px;
+    }
+
+    .slide.active .fade-up {
+      animation: fadeUp 1s cubic-bezier(.22, .61, .36, 1) both;
+    }
+
+    .slide.active .fade-up:nth-child(1) {
+      animation-delay: .2s;
+    }
+
+    .slide.active .fade-up:nth-child(2) {
+      animation-delay: .35s;
+    }
+
+    .slide.active .fade-up:nth-child(3) {
+      animation-delay: .5s;
+    }
+
+    .slide.active .fade-up:nth-child(4) {
+      animation-delay: .65s;
+    }
+
+    .slide.active .fade-up:nth-child(5) {
+      animation-delay: .8s;
+    }
+
+    .slide.active .fade-up:nth-child(6) {
+      animation-delay: .95s;
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(28px);
+        filter: blur(8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0);
+      }
+    }
+
+    .progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #0ea5e9, #a855f7, #ec4899);
+      box-shadow: 0 0 12px rgba(168, 85, 247, 0.6);
+      transition: width .8s cubic-bezier(.22, .61, .36, 1);
+      z-index: 100;
+    }
+
+    .slide-footer {
+      position: absolute;
+      bottom: 4vh;
+      left: 7vw;
+      right: 7vw;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.35);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      z-index: 5;
+    }
+
+    .slide-footer .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-mark {
+      width: 20px;
+      height: 20px;
+      background: linear-gradient(135deg, #0ea5e9, #a855f7);
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 700;
+      font-size: 9px;
+    }
+
+    .controls {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      z-index: 50;
+      opacity: 0;
+      transition: opacity .4s;
+    }
+
+    body:hover .controls {
+      opacity: 0.5;
+    }
+
+    .controls:hover {
+      opacity: 1 !important;
+    }
+
+    .controls button {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(20px);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all .2s;
+    }
+
+    .controls button:hover {
+      background: rgba(255, 255, 255, 0.15);
+      transform: scale(1.05);
+    }
+
+    .controls .count {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #fff;
+      padding: 0 18px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      font-size: 11px;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.1em;
+    }
+
+    /* COVER */
+    .slide-cover {
+      justify-content: space-between;
+    }
+
+    .cover-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .cover-header .brand-mark {
+      width: 32px;
+      height: 32px;
+      font-size: 12px;
+    }
+
+    .cover-header span {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.5);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+
+    .cover-content {
+      margin: auto 0;
+    }
+
+    .cover-meta {
+      font-size: 12px;
+      color: rgba(168, 85, 247, 0.9);
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      margin-bottom: 40px;
+      font-weight: 500;
+    }
+
+    .cover h1 {
+      font-size: clamp(80px, 11vw, 180px);
+      font-weight: 700;
+      line-height: 0.92;
+      letter-spacing: -0.05em;
+      margin-bottom: 32px;
+    }
+
+    .cover h1 .line2 {
+      background: linear-gradient(135deg, #0ea5e9 0%, #a855f7 50%, #ec4899 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .cover-tag {
+      font-family: 'Instrument Serif', serif;
+      font-style: italic;
+      font-size: clamp(22px, 2vw, 32px);
+      color: rgba(255, 255, 255, 0.7);
+      max-width: 700px;
+    }
+
+    .cover-author {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding-top: 24px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .cover-author .av {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #0ea5e9, #a855f7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 14px;
+      box-shadow: 0 0 30px rgba(168, 85, 247, 0.4);
+    }
+
+    .cover-author .info .name {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .cover-author .info .role {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.5);
+      letter-spacing: 0.05em;
+    }
+
+    /* JORNADA / ABOUT */
+    .jornada-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      margin-top: 48px;
+      align-items: start;
+    }
+
+    .jornada-bio {
+      font-size: clamp(15px, 1.4vw, 19px);
+      color: rgba(255, 255, 255, 0.75);
+      line-height: 1.75;
+    }
+
+    .jornada-bio strong {
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .jornada-items {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .jornada-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+      padding: 20px 24px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .jornada-item .icon {
+      font-size: 24px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .jornada-item .text h4 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .jornada-item .text p {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.5);
+      line-height: 1.5;
+    }
+
+    /* SLIDE PERGUNTA */
+    .slide-pergunta {
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .slide-pergunta h1 {
+      max-width: 1300px;
+      margin-bottom: 64px;
+    }
+
+    .slide-pergunta h1 .accent {
+      font-family: 'Instrument Serif', serif;
+      font-style: italic;
+      color: rgba(255, 255, 255, 0.55);
+      font-weight: 400;
+    }
+
+    .slide-pergunta .resposta {
+      font-size: clamp(20px, 2vw, 28px);
+      font-weight: 500;
+      color: #fff;
+      line-height: 1.4;
+      padding-left: 32px;
+      border-left: 2px solid #a855f7;
+      box-shadow: -8px 0 30px -8px rgba(168, 85, 247, 0.5);
+    }
+
+    .slide-pergunta .resposta strong {
+      background: linear-gradient(135deg, #ec4899 0%, #a855f7 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: 700;
+    }
+
+    /* ESCALETA */
+    .escaleta-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-top: 64px;
+    }
+
+    .escaleta-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      padding: 36px 32px;
+      backdrop-filter: blur(20px);
+    }
+
+    .escaleta-card .num {
+      font-size: 72px;
+      font-weight: 800;
+      letter-spacing: -0.05em;
+      line-height: 1;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .escaleta-card h3 {
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      letter-spacing: -0.02em;
+    }
+
+    .escaleta-card p {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.55);
+      line-height: 1.6;
+    }
+
+    /* DADOS DA PLATEIA */
+    .dados-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+      margin-top: 56px;
+    }
+
+    .dado-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      padding: 36px 28px;
+      text-align: center;
+      backdrop-filter: blur(20px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .dado-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+    }
+
+    .dado-card:nth-child(1)::before {
+      background: linear-gradient(90deg, #0ea5e9, #a855f7);
+    }
+
+    .dado-card:nth-child(2)::before {
+      background: linear-gradient(90deg, #a855f7, #ec4899);
+    }
+
+    .dado-card:nth-child(3)::before {
+      background: linear-gradient(90deg, #ec4899, #f43f5e);
+    }
+
+    .dado-card .pct {
+      font-size: clamp(64px, 8vw, 120px);
+      font-weight: 800;
+      letter-spacing: -0.05em;
+      line-height: 1;
+      margin-bottom: 12px;
+    }
+
+    .dado-card:nth-child(1) .pct {
+      background: linear-gradient(135deg, #0ea5e9, #a855f7);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .dado-card:nth-child(2) .pct {
+      background: linear-gradient(135deg, #a855f7, #ec4899);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .dado-card:nth-child(3) .pct {
+      background: linear-gradient(135deg, #ec4899, #f43f5e);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .dado-card .label {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.6);
+      line-height: 1.5;
+    }
+
+    .dados-caption {
+      margin-top: 48px;
+      font-family: 'Instrument Serif', serif;
+      font-style: italic;
+      font-size: clamp(18px, 1.6vw, 24px);
+      color: rgba(255, 255, 255, 0.55);
+      text-align: center;
+    }
+
+    /* CASE INTRO */
+    .slide-case-intro {
+      justify-content: center;
+    }
+
+    .slide-case-intro h1 {
+      max-width: 1300px;
+    }
+
+    .slide-case-intro h1 .l1 {
+      color: rgba(255, 255, 255, 0.45);
+      font-family: 'Instrument Serif', serif;
+      font-style: italic;
+      font-weight: 400;
+    }
+
+    .slide-case-intro h1 .l2 {
+      margin-top: 28px;
+      font-weight: 700;
+    }
+
+    .slide-case-intro h1 .l2 .glow {
+      background: linear-gradient(135deg, #fff 20%, #0ea5e9 60%, #a855f7 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 60px rgba(14, 165, 233, 0.4));
+    }
+
+    /* CASE CARDS */
+    .case-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-top: 48px;
+    }
+
+    .case-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      padding: 32px 28px;
+      backdrop-filter: blur(20px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .case-card::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      pointer-events: none;
+    }
+
+    .case-card:nth-child(3n+1)::before {
+      background: radial-gradient(circle, rgba(14, 165, 233, 0.08), transparent 50%);
+    }
+
+    .case-card:nth-child(3n+2)::before {
+      background: radial-gradient(circle, rgba(168, 85, 247, 0.08), transparent 50%);
+    }
+
+    .case-card:nth-child(3n)::before {
+      background: radial-gradient(circle, rgba(236, 72, 153, 0.08), transparent 50%);
+    }
+
+    .case-card>* {
+      position: relative;
+      z-index: 1;
+    }
+
+    .case-icon {
+      font-size: 36px;
+      margin-bottom: 20px;
+      display: inline-block;
+    }
+
+    .case-card h4 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 10px;
+      letter-spacing: -0.02em;
+    }
+
+    .case-card p {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.55);
+      line-height: 1.65;
+    }
+
+    /* ECONOMIA / BIG NUMBERS */
+    .economia-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1px 1fr;
+      gap: 80px;
+      align-items: center;
+      margin-top: 80px;
+      flex: 1;
+    }
+
+    .economia-wrap.three-col {
+      grid-template-columns: 1fr 1px 1fr 1px 1fr;
+      gap: 40px;
+      margin-top: 48px;
+    }
+
+    .economia-block.emerald .tag {
+      color: rgba(16, 185, 129, 0.9);
+    }
+
+    .economia-block.emerald .badge {
+      background: rgba(16, 185, 129, 0.12);
+      border-color: rgba(16, 185, 129, 0.3);
+      color: #6ee7b7;
+    }
+
+    .economia-block .tag {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+    }
+
+    .economia-block.blue .tag {
+      color: rgba(14, 165, 233, 0.9);
+    }
+
+    .economia-block.purple .tag {
+      color: rgba(168, 85, 247, 0.9);
+    }
+
+    .economia-block .big {
+      font-size: clamp(64px, 9vw, 160px);
+      font-weight: 700;
+      line-height: 0.95;
+      letter-spacing: -0.055em;
+      margin-bottom: 20px;
+    }
+
+    .economia-block.blue .big {
+      background: linear-gradient(135deg, #0ea5e9 0%, #a855f7 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 40px rgba(14, 165, 233, 0.4));
+    }
+
+    .economia-block.purple .big {
+      background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 40px rgba(168, 85, 247, 0.4));
+    }
+
+    .economia-block .sub {
+      font-family: 'Instrument Serif', serif;
+      font-style: italic;
+      font-size: 22px;
+      color: rgba(255, 255, 255, 0.55);
+      margin-bottom: 16px;
+    }
+
+    .economia-block .badge {
+      display: inline-block;
+      padding: 8px 18px;
+      background: rgba(168, 85, 247, 0.12);
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      color: #c4b5fd;
+      border-radius: 24px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .economia-divider {
+      background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+      height: 80%;
+      align-self: center;
+    }
+
+    /* PROCESSO CARDS */
+    .processo-wrap {
+      margin-top: 48px;
+    }
+
+    .processo-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .processo-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 24px;
+      padding: 22px 28px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .processo-step::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+    }
+
+    .processo-step.blue::before {
+      background: linear-gradient(180deg, #0ea5e9, #a855f7);
+    }
+
+    .processo-step.purple::before {
+      background: linear-gradient(180deg, #a855f7, #ec4899);
+    }
+
+    .processo-step.pink::before {
+      background: linear-gradient(180deg, #ec4899, #f43f5e);
+    }
+
+    .processo-step.green::before {
+      background: linear-gradient(180deg, #10b981, #0ea5e9);
+    }
+
+    .processo-step .num {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      color: rgba(255, 255, 255, 0.15);
+      flex-shrink: 0;
+      line-height: 1;
+      min-width: 36px;
+    }
+
+    .processo-step .content h4 {
+      font-size: 17px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .processo-step .content p {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.5);
+      line-height: 1.5;
+    }
+
+    .processo-resultado {
+      margin-top: 24px;
+      padding: 20px 28px;
+      background: rgba(14, 165, 233, 0.06);
+      border: 1px solid rgba(14, 165, 233, 0.2);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 16px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.85);
+    }
+
+    .processo-resultado .arrow {
+      font-size: 20px;
+      color: #0ea5e9;
+      flex-shrink: 0;
+    }
+
+    /* COMPARE TABLE */
+    .compare-table {
+      margin-top: 48px;
+      width: 100%;
+      border-collapse: collapse;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 18px;
+      overflow: hidden;
+      backdrop-filter: blur(20px);
+    }
+
+    .compare-table th,
+    .compare-table td {
+      padding: 24px 32px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .compare-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .compare-table th {
+      background: rgba(255, 255, 255, 0.02);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .compare-table td {
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .compare-table td.metric {
+      font-size: 15px;
+      color: rgba(255, 255, 255, 0.7);
+      font-weight: 500;
+    }
+
+    .compare-table td.before {
+      color: rgba(255, 255, 255, 0.3);
+      text-decoration: line-through;
+    }
+
+    .compare-table td.after {
+      color: #fff;
+    }
+
+    .compare-table td.variation {
+      background: linear-gradient(135deg, #0ea5e9, #a855f7);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: 700;
+    }
+
+    /* CONCLUSÃO */
+    .conclusao-list {
+      margin-top: 50px;
+    }
+
+    .conclusao-item {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      padding: 24px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .conclusao-item:last-child {
+      border-bottom: none;
+    }
+
+    .conclusao-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(14, 165, 233, 0.15), rgba(168, 85, 247, 0.15));
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .conclusao-item .text {
+      font-size: 20px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.85);
+      line-height: 1.4;
+    }
+
+    .conclusao-item .text strong {
+      background: linear-gradient(135deg, #0ea5e9, #a855f7);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: 700;
+    }
+
+    /* ENCERRAMENTO */
+    .slide-encerramento {
+      justify-content: center;
+    }
+
+    .slide-encerramento h1 {
+      max-width: 1300px;
+    }
+
+    .slide-encerramento h1 .l1 {
+      color: rgba(255, 255, 255, 0.45);
+      font-family: 'Instrument Serif', serif;
+      font-style: italic;
+      font-weight: 400;
+    }
+
+    .slide-encerramento h1 .l2 {
+      margin-top: 36px;
+      font-weight: 700;
+    }
+
+    .slide-encerramento h1 .l2 .glow {
+      background: linear-gradient(135deg, #fff 20%, #a855f7 60%, #ec4899 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 60px rgba(168, 85, 247, 0.4));
+    }
+
+    /* OBRIGADO / CTA */
+    .slide-obrigado {
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    .slide-obrigado h1 {
+      font-size: clamp(80px, 12vw, 200px);
+      background: linear-gradient(135deg, #0ea5e9 0%, #a855f7 50%, #ec4899 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.06em;
+      line-height: 0.9;
+      filter: drop-shadow(0 0 80px rgba(168, 85, 247, 0.3));
+      margin-bottom: 16px;
+    }
+
+    .slide-obrigado .tagline {
+      font-family: 'Instrument Serif', serif;
+      font-style: italic;
+      font-size: clamp(20px, 2vw, 32px);
+      color: rgba(255, 255, 255, 0.55);
+      margin-bottom: 24px;
+    }
+
+    .cta-cards {
+      display: flex;
+      gap: 32px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 24px;
+    }
+
+    .cta-card {
+      text-align: center;
+    }
+
+    .cta-card .cta-label {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.35);
+      margin-bottom: 4px;
+    }
+
+    .cta-card .cta-value {
+      font-size: 14px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .slide-obrigado .author-card {
+      display: inline-flex;
+      align-items: center;
+      gap: 18px;
+      margin-top: 48px;
+      padding: 18px 28px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(20px);
+      border-radius: 60px;
+    }
+
+    .slide-obrigado .author-card .av {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, #0ea5e9, #a855f7);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+      box-shadow: 0 0 24px rgba(168, 85, 247, 0.5);
+    }
+
+    .slide-obrigado .author-card .info {
+      text-align: left;
+    }
+
+    .slide-obrigado .author-card .name {
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .slide-obrigado .author-card .role {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.5);
+      margin-top: 2px;
+    }
+
+    /* SLIDE 7 STACKED */
+    .case-grid.s7-grid {
+      gap: 8px 16px;
+    }
+
+    .case-grid.s7-grid .case-card {
+      padding: 12px 16px;
+      border-radius: 12px;
+    }
+
+    .case-grid.s7-grid .case-icon {
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+
+    .case-grid.s7-grid h4 {
+      font-size: 16px;
+      margin-bottom: 6px;
+    }
+
+    .case-grid.s7-grid p {
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .s7-resultados-lista {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 12px;
+      margin-top: 32px;
+    }
+
+    .s7-resultados-title {
+      grid-column: 1 / -1;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      background: linear-gradient(90deg, #0ea5e9, #a855f7);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 4px;
+    }
+
+    .s7-resultado-item {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 14px 20px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      position: relative;
+      overflow: hidden;
+      font-size: 15px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .s7-resultado-item::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+    }
+
+    .s7-resultado-item:nth-child(1)::before {
+      background: linear-gradient(180deg, #0ea5e9, #a855f7);
+    }
+
+    .s7-resultado-item:nth-child(2)::before {
+      background: linear-gradient(180deg, #a855f7, #ec4899);
+    }
+
+    .s7-resultado-item:nth-child(3)::before {
+      background: linear-gradient(180deg, #ec4899, #f43f5e);
+    }
+
+    .s7-resultado-item:nth-child(4)::before {
+      background: linear-gradient(180deg, #10b981, #0ea5e9);
+    }
+
+    .s7-resultado-item:nth-child(5)::before {
+      background: linear-gradient(180deg, #f59e0b, #10b981);
+    }
+
+    .s7-resultado-item:nth-child(6)::before {
+      background: linear-gradient(180deg, #a855f7, #0ea5e9);
+    }
+
+    .s7-check {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      background: linear-gradient(135deg, #0ea5e9, #10b981);
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: #fff;
+      font-weight: 800;
+      box-shadow: 0 0 12px rgba(14, 165, 233, 0.4);
+    }
+
+    .qr-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin-top: 0;
+      margin-bottom: 12px;
+    }
+
+    .qr-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: rgba(168, 85, 247, 0.8);
+    }
+
+    /* SLIDE 12 STACKED BIG NUMBER */
+    .s12-stats-container {
+      display: flex;
+      justify-content: center;
+      margin-top: 32px;
+      width: 100%;
+    }
+
+    .s12-stats-container .economia-block {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .economia-block.emerald .big {
+      background: linear-gradient(135deg, #10b981 0%, #0ea5e9 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 40px rgba(16, 185, 129, 0.4));
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="progress" id="progress"></div>
+
+  <div class="deck" id="deck">
+
+    <!-- SLIDE 1: CAPA -->
+    <div class="slide slide-pergunta glow-blue active" data-slide="1">
+      <div class="eyebrow">Amcham · Comitê de Marketing e Vendas</div>
+      <h1 class="hero">
+        Inteligência Artificial<br>
+        <span class="accent">aplicada em vendas.</span>
+      </h1>
+      <p class="resposta">
+        Como IA está transformando o processo de vendas e gerando resultados — <strong>na prática.</strong>
+      </p>
+      <div class="cover-author" style="margin-top:64px;">
+        <div class="av">RV</div>
+        <div class="info">
+          <div class="name">Roberto Viana</div>
+          <div class="role">Diretor de Receitas · Ipê Digital</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 2: PERGUNTA DE ABERTURA -->
+    <div class="slide slide-pergunta glow-magenta" data-slide="2">
+      <div class="eyebrow">Abertura</div>
+      <h1 class="hero">
+        Quanto tempo e dinheiro seu time perde<br>
+        <span class="accent">por não responder o lead na hora certa?</span>
+      </h1>
+      <p class="resposta">
+        Eu também me fiz essa pergunta. E a resposta me fez mudar <strong>tudo</strong> no processo de vendas.
+      </p>
+      <div class="slide-footer">
+        <div class="brand">
+          <div class="brand-mark">ID</div><span>Roberto Viana - IA para Vendas</span>
+        </div>
+        <div class="slide-num">02 — 16</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 3: DADOS DA PLATEIA -->
+    <div class="slide glow-red" data-slide="3">
+      <div class="eyebrow">Diagnóstico da sala</div>
+      <h2 class="title">O que vocês me disseram.</h2>
+      <p class="subtitle" style="margin-top:16px;">Antes de começar, pedi que respondessem uma pesquisa rápida. Os dados
+        são de vocês.</p>
+      <div class="dados-grid">
+        <div class="dado-card">
+          <div class="pct" id="pct1">–%</div>
+          <div class="label">já usam IA para<br>qualificação de leads</div>
+        </div>
+        <div class="dado-card">
+          <div class="pct" id="pct2">–%</div>
+          <div class="label">têm cadência automática<br>no processo de vendas</div>
+        </div>
+        <div class="dado-card">
+          <div class="pct" id="pct3">–%</div>
+          <div class="label">fazem follow-up automático<br>pós-venda ou pós-perdido</div>
+        </div>
+      </div>
+      <p class="dados-caption">Quem não está fazendo isso hoje, está deixando receita na mesa.</p>
+      <div class="slide-footer">
+        <div class="brand">
+          <div class="brand-mark">ID</div><span>Roberto Viana - IA para Vendas</span>
+        </div>
+        <div class="slide-num">03 — 16</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 4: ESCALETA -->
+    <div class="slide glow-cyan" data-slide="4">
+      <div class="eyebrow">O que vou apresentar</div>
+      <h2 class="title">Três casos reais. Três resultados.</h2>
+      <div class="escaleta-grid">
+        <div class="escaleta-card">
+          <div class="num">01</div>
+          <h3>Qualificação de Leads</h3>
+          <p>Como IA atende, pergunta, segue o processo e qualifica o lead 24h por dia — sem perder nenhuma
+            oportunidade.</p>
+        </div>
+        <div class="escaleta-card">
+          <div class="num">02</div>
+          <h3>Cadência Automática</h3>
+          <p>Como manter contato com leads que não respondem e reativar quem estava perdido com a mensagem certa no
+            momento certo.</p>
+        </div>
+        <div class="escaleta-card">
+          <div class="num">03</div>
+          <h3>Follow-up Pós-Venda</h3>
+          <p>Como transformar clientes e perdidos em novas oportunidades de receita com automação inteligente.</p>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div class="brand">
+          <div class="brand-mark">ID</div><span>Roberto Viana - IA para Vendas</span>
+        </div>
+        <div class="slide-num">04 — 16</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 5: CASE 1 INTRO -->
+    <div class="slide slide-case-intro glow-blue" data-slide="5">
+      <div class="eyebrow">Case 01</div>
+      <h1 class="hero">
+        <div class="l1">O lead levantou a mão.</div>
+        <div class="l2">Seu time estava <span class="glow">disponível?</span></div>
+      </h1>
+      <div class="slide-footer">
+        <div class="brand">
+          <div class="brand-mark">ID</div><span>Roberto Viana - IA para Vendas</span>
+        </div>
+        <div class="slide-num">05 — 16</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 6: CASE 1 DETALHES -->
+    <div class="slide glow-blue" data-slide="6">
+      <div class="eyebrow">Case 01 · Qualificação com IA</div>
+      <h2 class="title">Como a IA qualifica o lead.</h2>
+      <div class="case-grid s7-grid" style="margin-top:16px;">
+        <div class="case-card">
+          <div class="case-icon">⚡</div>
+          <h4>Atendimento imediato</h4>
+          <p>24h por dia, 7 dias por semana. O lead recebe resposta em segundos, no horário que ele quiser — sem
+            depender do time.</p>
+        </div>
+        <div class="case-card">
+          <div class="case-icon">🎯</div>
+          <h4>Segue o processo sem desviar</h4>
+          <p>A IA faz as perguntas certas, na ordem certa — sem improvisar, sem pular etapas, sempre fiel ao playbook.
+          </p>
+        </div>
+        <div class="case-card">
+          <div class="case-icon">📋</div>
+          <h4>Qualificação automática</h4>
+          <p>Ao final da conversa, entrega o lead classificado e com resumo completo, pronto para o vendedor avançar.
+          </p>
+        </div>
+        <div class="case-card">
+          <div class="case-icon">🤖</div>
+          <h4>Personaliza a conversa</h4>
+          <p>A IA adapta as perguntas e respostas conforme o perfil, interesse e contexto de cada lead, tornando a
+            interação mais relevante.</p>
+        </div>
+        <div class="case-card">
+          <div class="case-icon">📈</div>
+          <h4>Gera inteligência comercial</h4>
+          <p>Mapeia objeções, necessidades e padrões de comportamento dos leads, gerando insights para melhorar o
+            processo de vendas.</p>
+        </div>
+        <div class="case-card">
+          <div class="case-icon">📅</div>
+          <h4>Agenda e passa para o humano</h4>
+          <p>Quando qualificado, marca a reunião e transfere para o time comercial no momento certo.</p>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div class="brand">
+          <div class="brand-mark">ID</div><span>Roberto Viana - IA para Vendas</span>
+        </div>
+        <div class="slide-num">06 — 16</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 7: CASE 1 RESULTADOS -->
+    <div class="slide glow-blue" data-slide="7">
+      <div class="eyebrow">Case 01 · Qualificação com IA</div>
+      <h2 class="title">Resultados da qualificação com IA.</h2>
+      <div class="s7-resultados-lista" style="margin-top:48px;">
+        <div class="s7-resultado-item">
+          <div class="s7-check">✓</div><span>Mais leads atendidos com maior velocidade</span>
+        </div>
+        <div class="s7-resultado-item">
+          <div class="s7-check">✓</div><span>Mais leads qualificados</span>
+        </div>
+        <div class="s7-resultado-item">
+          <div class="s7-check">✓</div><span>Menos tempo gasto pelos vendedores</span>
+        </div>
+        <div class="s7-resultado-item">
+          <div class="s7-check">✓</div><span>Menor custo por oportunidade</span>
+        </div>
+        <div class="s7-resultado-item">
+          <div class="s7-check">✓</div><span>Processo comercial mais consistente</span>
+        </div>
+        <div class="s7-resultado-item">
+          <div class="s7-check">✓</div><span>Crescimento sem aumentar proporcionalmente a equipe</span>
+        </div>
+      </div>
+      <div class="s12-stats-container">
+        <div class="economia-block blue">
+          <div class="big">100%</div>
+          <div class="sub">dos leads respondidos em segundos</div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div class="brand">
+          <div class="brand-mark">ID</div><span>Roberto Viana - IA para Vendas</span>
+        </div>
+        <div class="slide-num">07 — 16</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 8: CASE 2 INTRO -->
+    <div class="slide slide-case-intro glow-purple" data-slide="8">
+      <div class="eyebrow">Case 02</div>
+      <h1 class="hero">
+        <div class="l1">O lead não respondeu.</div>
+        <div class="l2">Isso não significa <span class="glow">que ele desistiu.</span></div>
+      </h1>
+      <div class="slide-footer">
+        <div class="brand">
+          <div class="brand-mark">ID</div><span>Roberto Viana - IA para Vendas</span>
+        </div>
+        <div class="slide-num">08 — 16</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 9: CASE 2 DETALHES -->
+    <div class="slide glow-purple" data-slide="9">
+      <div class="eyebrow">Case 02 · Cadência Automática</div>
+      <h2 class="title">Quando o lead some. E volta.</h2>
+      <div class="processo-wrap">
+        <div class="processo-steps">
+          <div class="processo-step blue">
+            <div class="num">01</div>
+            <div class="content">
+              <h4>Primeiro contato sem resposta</h4>
+              <p>Lead entra, recebe a abertura — mas não responde. Motivo: falta de tempo, não de interesse.</p>
+            </div>
+          </div>
+          <div class="processo-step purple">
+            <div class="num">02</div>
+            <div class="content">
+              <h4>Cadência pré-definida entra em ação</h4>
+              <p>Sequência automática de mensagens, áudios e conteúdos relevantes, em intervalos estratégicos.</p>
+            </div>
+          </div>
+          <div class="processo-step pink">
+            <div class="num">03</div>
+            <div class="content">
+              <h4>Mensagem de breakup — a mais poderosa</h4>
+              <p>"Entendemos que talvez não seja o momento certo." — É aqui que a maioria dos leads responde.</p>
+            </div>
+          </div>
+          <div class="processo-step green">
+            <div class="num">04</div>
+            <div class="content">
+              <h4>Lead responde → agente de IA retoma</h4>
+              <p>Volta à qualificação e, se quente, avança para marcação de reunião.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div class="brand">
+          <div class="brand-mark">ID</div><span>Roberto Viana - IA para Vendas</span>
+        </div>
+        <div class="slide-num">09 — 16</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 10: BENCHMARK CADÊNCIA -->
+    <div class="slide glow-purple" data-slide="10">
+      <div class="eyebrow">Resultado · Cadência Automática</div>
+      <h2 class="title">Nossa taxa vs. mercado.</h2>
+      <div class="economia-wrap">
+        <div class="economia-block blue">
+          <div class="tag">Benchmark de mercado</div>
+          <div class="big">23%</div>
+          <div class="sub">de leads inbound convertidos em reunião</div>
+          <span class="badge">Inside Sales Benchmark Brasil</span>
+        </div>
+        <div class="economia-divider"></div>
+        <div class="economia-block purple">
+          <div class="tag">Nossa operação · Ipê Digital</div>
+          <div class="big">40%</div>
+          <div class="sub">de leads inbound convertidos em reunião</div>
+          <span class="badge"
+            style="background:rgba(236,72,153,0.12);border-color:rgba(236,72,153,0.3);color:#f9a8d4;">+74% acima do
+            mercado</span>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div class="brand">
+          <div class="brand-mark">ID</div><span>Roberto Viana - IA para Vendas</span>
+        </div>
+        <div class="slide-num">10 — 16</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 11: CASE 3 INTRO -->
+    <div class="slide slide-case-intro glow-emerald" data-slide="11">
+      <div class="eyebrow">Case 03</div>
+      <h1 class="hero">
+        <div class="l1">Venda fechada. Negócio perdido.</div>
+        <div class="l2">E agora? Você <span class="glow"
+            style="background: linear-gradient(135deg,#fff 20%,#10b981 60%,#0ea5e9 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;">abandona?</span>
+        </div>
+      </h1>
+      <div class="slide-footer">
+        <div class="brand">
+          <div class="brand-mark">ID</div><span>Roberto Viana - IA para Vendas</span>
+        </div>
+        <div class="slide-num">11 — 16</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 12: CASE 3 DETALHES -->
+    <div class="slide glow-emerald" data-slide="12">
+      <div class="eyebrow">Case 03 · Follow-up Pós-Venda e Pós-Perdido</div>
+      <h2 class="title">Receita que você deixa na mesa.</h2>
+      <div class="case-grid">
+        <div class="case-card">
+          <div class="case-icon">🏆</div>
+          <h4>Pós-venda: indicação</h4>
+          <p>Cliente satisfeito indica novos clientes. A IA mantém o relacionamento ativo e pede indicação no momento
+            certo.</p>
+        </div>
+        <div class="case-card">
+          <div class="case-icon">🏪</div>
+          <h4>Pós-venda: expansão</h4>
+          <p>Quem abriu uma loja pode abrir outra. A IA identifica o momento e oferece a próxima venda automaticamente.
+          </p>
+        </div>
+        <div class="case-card">
+          <div class="case-icon">🔄</div>
+          <h4>Pós-perdido: reaquecimento</h4>
+          <p>Perdido não é descartado — é adiado. A IA retoma o contato após meses e recupera oportunidades que seriam
+            zero.</p>
+        </div>
+      </div>
+      <div class="s12-stats-container">
+        <div class="economia-block emerald">
+          <div class="big">+27%</div>
+          <div class="sub">receita das oportunidades que já existem — sem custo de aquisição</div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div class="brand">
+          <div class="brand-mark">ID</div><span>Roberto Viana - IA para Vendas</span>
+        </div>
+        <div class="slide-num">12 — 16</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 13: COMPARATIVO -->
+    <div class="slide glow-cyan" data-slide="13">
+      <div class="eyebrow">Antes vs. Depois</div>
+      <h2 class="title">O processo com IA e sem IA.</h2>
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th>Etapa</th>
+            <th>Sem IA</th>
+            <th>Com IA</th>
+            <th>Diferença</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="metric">Tempo de 1ª resposta ao lead</td>
+            <td class="before">Horas (ou dias)</td>
+            <td class="after">Segundos</td>
+            <td class="variation">Imediato</td>
+          </tr>
+          <tr>
+            <td class="metric">Leads sem resposta trabalhados</td>
+            <td class="before">Depende do vendedor</td>
+            <td class="after">100% em cadência</td>
+            <td class="variation">+100%</td>
+          </tr>
+          <tr>
+            <td class="metric">Follow-up pós-venda/perdido</td>
+            <td class="before">Quase zero</td>
+            <td class="after">Automático</td>
+            <td class="variation">Zero vs. Sempre</td>
+          </tr>
+          <tr>
+            <td class="metric">Consistência do processo</td>
+            <td class="before">Varia por vendedor</td>
+            <td class="after">100% padronizado</td>
+            <td class="variation">Sempre certo</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="slide-footer">
+        <div class="brand">
+          <div class="brand-mark">ID</div><span>Roberto Viana - IA para Vendas</span>
+        </div>
+        <div class="slide-num">13 — 16</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 14: IMPACTO / BIG NUMBERS -->
+    <div class="slide glow-violet" data-slide="14">
+      <div class="eyebrow">Impacto real</div>
+      <h2 class="title">O que muda quando você implementa.</h2>
+      <div class="economia-wrap three-col">
+        <div class="economia-block blue">
+          <div class="tag">Velocidade de resposta</div>
+          <div class="big">24/7</div>
+          <div class="sub">disponível para o lead</div>
+          <span class="badge">sem depender do horário do time</span>
+        </div>
+        <div class="economia-divider"></div>
+        <div class="economia-block purple">
+          <div class="tag">Oportunidades recuperadas</div>
+          <div class="big">+3×</div>
+          <div class="sub">mais oportunidades ativas</div>
+          <span class="badge">leads perdidos que voltam</span>
+        </div>
+        <div class="economia-divider"></div>
+        <div class="economia-block emerald">
+          <div class="tag">Aumento na receita</div>
+          <div class="big">32%</div>
+          <div class="sub">sem aumento de oportunidades</div>
+          <span class="badge">trabalhando a base já gerada</span>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div class="brand">
+          <div class="brand-mark">ID</div><span>Roberto Viana - IA para Vendas</span>
+        </div>
+        <div class="slide-num">14 — 16</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 15: ENCERRAMENTO / FRASE DE IMPACTO -->
+    <div class="slide slide-encerramento glow-violet" data-slide="15">
+      <div class="eyebrow">Para levar</div>
+      <h1 class="hero">
+        <div class="l1">IA em vendas não é sobre substituir o vendedor.</div>
+        <div class="l2">É sobre <span class="glow">não perder nenhuma oportunidade</span><br>enquanto ele dorme.</div>
+      </h1>
+      <div class="slide-footer">
+        <div class="brand">
+          <div class="brand-mark">ID</div><span>Roberto Viana - IA para Vendas</span>
+        </div>
+        <div class="slide-num">15 — 16</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 16: OBRIGADO / CTA -->
+    <div class="slide slide-obrigado glow-magenta" data-slide="16">
+      <h1>Obrigado.</h1>
+      <div class="tagline">Quer ver isso funcionando na sua operação?</div>
+
+      <div class="qr-wrap">
+        <img id="whatsapp-qr" width="250" height="250"
+          style="background: rgba(255, 255, 255, 0.05); border-radius: 16px; padding: 16px; box-sizing: border-box;"
+          alt="QR Code">
+        <div class="qr-label">Quero mais vendas</div>
+      </div>
+
+      <div class="cta-cards">
+        <div class="cta-card">
+          <div class="cta-label">Plataforma</div>
+          <div class="cta-value">99agentes.com.br</div>
+        </div>
+        <div class="cta-card">
+          <div class="cta-label">Contato</div>
+          <div class="cta-value">contato@99agentes.com.br</div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div class="brand">
+          <div class="brand-mark">ID</div><span>Roberto Viana - IA para Vendas</span>
+        </div>
+        <div class="slide-num">16 — 16</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="controls">
+    <button id="prevBtn">‹</button>
+    <div class="count"><span id="currentNum">1</span> / <span id="totalNum">15</span></div>
+    <button id="nextBtn">›</button>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+  <script>
+    const deck = document.getElementById('deck');
+    let slides = Array.from(deck.querySelectorAll('.slide'));
+    let total = slides.length;
+    let current = 0;
+
+    const progress = document.getElementById('progress');
+    const currentNum = document.getElementById('currentNum');
+    const totalNum = document.getElementById('totalNum');
+
+    function updateNumbers() {
+      totalNum.textContent = total;
+      currentNum.textContent = current + 1;
+      progress.style.width = ((current + 1) / total * 100) + '%';
+      slides.forEach((s, i) => {
+        const numEl = s.querySelector('.slide-num');
+        if (numEl) numEl.textContent = String(i + 1).padStart(2, '0') + ' — ' + String(total).padStart(2, '0');
+      });
+    }
+
+    function goTo(i) {
+      if (i < 0 || i >= total) return;
+      slides[current].classList.remove('active');
+      current = i;
+      slides[current].classList.add('active');
+      updateNumbers();
+    }
+
+    document.getElementById('nextBtn').onclick = (e) => { e.stopPropagation(); goTo(current + 1); };
+    document.getElementById('prevBtn').onclick = (e) => { e.stopPropagation(); goTo(current - 1); };
+
+    document.addEventListener('click', e => {
+      if (e.target.closest('button') || e.target.closest('a')) return;
+      const x = e.clientX;
+      if (x > window.innerWidth / 2) goTo(current + 1);
+      else goTo(current - 1);
+    });
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); goTo(current + 1); }
+      else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); goTo(current - 1); }
+      else if (e.key === 'Home') goTo(0);
+      else if (e.key === 'End') goTo(total - 1);
+      else if (e.key === 'f' || e.key === 'F') {
+        if (document.fullscreenElement) document.exitFullscreen();
+        else document.documentElement.requestFullscreen();
+      }
+    });
+
+    // Generate WhatsApp QR Code dynamically
+    (function () {
+      const telefone = '551152961699';
+      const mensagem = 'Quero gerar mais vendas com IA!';
+      const urlWhatsapp = `https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`;
+
+      const qrImg = document.getElementById('whatsapp-qr');
+      if (qrImg && typeof QRCode !== 'undefined') {
+        QRCode.toDataURL(urlWhatsapp, {
+          width: 400, // High density for crisp rendering (at 200px display width)
+          margin: 1,
+          color: {
+            dark: '#ffffff',
+            light: '#00000000'
+          }
+        }, function (err, url) {
+          if (err) {
+            console.error('Erro ao gerar QR Code:', err);
+          } else {
+            qrImg.src = url;
+          }
+        });
+      }
+    })();
+
+    updateNumbers();
+  </script>
+</body>
+
+</html>
