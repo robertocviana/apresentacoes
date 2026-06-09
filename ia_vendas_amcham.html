@@ -557,7 +557,7 @@
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 32px;
-      margin-top: 56px;
+      margin-top: 36px;
     }
 
     .dado-card {
@@ -627,13 +627,95 @@
       line-height: 1.5;
     }
 
+    .dado-card .label strong {
+      font-size: clamp(14px, 1.8vw, 24px);
+      font-weight: 700;
+    }
+
+    .dado-card:nth-child(1) .label strong {
+      background: linear-gradient(135deg, #0ea5e9, #a855f7);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .dado-card:nth-child(2) .label strong {
+      background: linear-gradient(135deg, #a855f7, #ec4899);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .dado-card:nth-child(3) .label strong {
+      background: linear-gradient(135deg, #ec4899, #f43f5e);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
     .dados-caption {
-      margin-top: 48px;
+      margin-top: 20px;
       font-family: 'Instrument Serif', serif;
       font-style: italic;
       font-size: clamp(18px, 1.6vw, 24px);
       color: rgba(255, 255, 255, 0.55);
       text-align: center;
+    }
+
+    .desafios-box {
+      margin-top: 40px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 18px;
+      padding: 20px 28px;
+      max-width: 900px;
+      margin-left: auto;
+      margin-right: auto;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2), 
+                  inset 0 0 12px rgba(255, 255, 255, 0.05);
+    }
+
+    .desafios-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      background: linear-gradient(90deg, #ec4899, #a855f7);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    .desafios-list {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .desafio-item {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 12px;
+      padding: 14px 20px;
+      font-size: 15px;
+      color: #fff;
+      font-weight: 600;
+      text-align: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.3s cubic-bezier(.22, .61, .36, 1);
+    }
+
+    .desafio-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(168, 85, 247, 0.35);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(168, 85, 247, 0.15);
     }
 
     /* CASE INTRO */
@@ -1341,19 +1423,26 @@
         são de vocês.</p>
       <div class="dados-grid">
         <div class="dado-card">
-          <div class="pct" id="pct1">–%</div>
-          <div class="label">já usam IA para<br>qualificação de leads</div>
+          <div class="pct" id="pct1">10%</div>
+          <div class="label">já usam IA para<br><strong>qualificação de leads</strong></div>
         </div>
         <div class="dado-card">
-          <div class="pct" id="pct2">–%</div>
-          <div class="label">têm cadência automática<br>no processo de vendas</div>
+          <div class="pct" id="pct2">40%</div>
+          <div class="label">têm <strong>cadência automática</strong><br>no processo de vendas</div>
         </div>
         <div class="dado-card">
-          <div class="pct" id="pct3">–%</div>
-          <div class="label">fazem follow-up automático<br>pós-venda ou pós-perdido</div>
+          <div class="pct" id="pct3">20%</div>
+          <div class="label">fazem <strong>follow-up automático</strong><br>pós-venda ou pós-perdido</div>
         </div>
       </div>
-      <p class="dados-caption">Quem não está fazendo isso hoje, está deixando receita na mesa.</p>
+      <div class="desafios-box">
+        <div class="desafios-title">Principais desafios</div>
+        <div class="desafios-list">
+          <div class="desafio-item">🛠️ Barreiras Técnicas</div>
+          <div class="desafio-item">💰 Custo e Orçamento</div>
+          <div class="desafio-item">🤝 Humanização vs. Automação</div>
+        </div>
+      </div>
       <div class="slide-footer">
         <div class="brand">
           <div class="brand-mark">ID</div><span>Roberto Viana - IA para Vendas</span>
